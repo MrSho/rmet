@@ -8,49 +8,54 @@ import struct
 import os
 import os.path as path
 
+import Command
+
 #Глобальные константы
 VHgamePath = u'D:/аниме/хентай/bestiality^monster^tentacles/!VH/my try/\
 VHゲーム０１_121005_translated'
 targetFile = path.join(VHgamePath, u'Map0545.lmu')
 
 
-#Читает закодированный размер блока
-#Ебанный накантос - переделать
-def getSize(fileObj):
-    b0 = struct.unpack('B', fileObj.read(1))[0]
-    if 0b10000000 & b0:
-        b1 = struct.unpack('B', fileObj.read(1))[0]
-        if 0b10000000 & b1:
-            b2 = struct.unpack('B', fileObj.read(1))[0]
-            if 0b10000000 & b2:
-                b3 = struct.unpack('B', fileObj.read(1))[0]
-                return (0b01111111 & b0) * 0x80 * 0x80 * 0x80 + (0b01111111 & b1) * 0x80 * 0x80 + (0b01111111 & b2) * 0x80 + b3
-            else:
-                return (0b01111111 & b0) * 0x80 * 0x80 + (0b01111111 & b1) * 0x80 + b2
-        else:
-            return (0b01111111 & b0) * 0x80 + b1 
+#Читает закодированный размер блока   
+def getSize(fileObj, sum = 0):
+    b = struct.unpack('B', fileObj.read(1))[0]
+    if 0b10000000 & b:
+        return getSize(fileObj, sum * 0x80 + (0b01111111 & b))
     else:
-        return b0
+        return sum * 0x80 + (0b01111111 & b)
 
+#Возвращает шестнадцатиричное представление для
+#для последовательности байтов в виде строки  
 def strInHex(string):
-    h = ''
+    s = str()
     for i in string:
-        s = hex(ord(i))[2:]
-        if len(s) == 1: s = '0' + s
-        h +=  s + ' '
-    return h
+        c = struct.unpack('B', i)[0]
+        c = hex(c).replace('0x', '')
+        if len(c) == 1: c = '0' + c
+        s += ' ' + c
+    return s.strip()      
+
 
 class MBlock(object):
     
     def __init__(self, fileObj, Map):
         self.data = self.read(fileObj)
+        self.Map = Map
         
     def read(self, fileObj):
         size = getSize(fileObj)
         return fileObj.read(size)
     
-    def __repr__(self):
+    def __repr__(self, depth = 0):
         return strInHex(self.data[:90])
+    
+class MString(MBlock):
+
+    #Fix! Не показывает иероглифы!      
+    def __repr__(self, depth = 0):
+        return self.data.decode(encoding='shift_jis_2004')
+    
+class MEnum(MBlock): pass
 
 
 class MStruct(object):
@@ -63,6 +68,13 @@ class MStruct(object):
         else:
             return ID
     
+    @staticmethod
+    def IDtoNameRepr(ID, Map):
+        if Map.has_key(ID):
+            return Map[ID][1]
+        else:
+            return strInHex(ID)
+        
     @staticmethod
     def getAnsMap(ID, Map):
         if Map.has_key(ID):
@@ -94,22 +106,21 @@ class MStruct(object):
             
         return bd
     
-    def __repr__(self):
+    def __repr__(self, depth = 0):
         s = str()
         for id, b in sorted(self.blockDict.items()):
-            id = MStruct.IDtoName(id, self.Map)
-            s += id + ' : ' + repr(b) + '\n' 
+            id = MStruct.IDtoNameRepr(id, self.Map)
+            s += '    ' * depth + id + ' : ' + b.__repr__(depth + 1) + '\n' 
         return s
       
-        
-    
 
 class MList(object):
     
     #MList   <= (Type, {})            
     def __init__(self, fileObj, Map):
         self.elemList = self.read(fileObj, Map)
-        
+    
+    #Fix!    
     def read(self, fileObj, Map):
         el = [0] * 1000
         size = getSize(fileObj)
@@ -124,12 +135,25 @@ class MList(object):
     def __getitem__(self, key):
         return self.elemList[key]
     
-    def __repr__(self):
+    def __repr__(self, depth = 0):
         s = '\n'
         for i, e in enumerate(self.elemList):
             if e:
-                s += '\tElem ' + str(i) + ': ' + repr(e) + '\n' 
+                s += '    ' * depth + '[' + str(i) + ']: ' + '\n'+  e.__repr__(depth + 1) 
         return s
+
+class MEventCommands(object):
+    defaultHandler = Command.Unknown
+    
+    def __init__(self, fileObj, Map):
+        self.CommandList = []
+    
+    def read(self, fileObj, Map): pass
+    
+    def __repr__(self, depth = 0): pass
+    
+   
+        
 
 
 #MMap    <= (Type, {})
@@ -138,21 +162,22 @@ class MList(object):
 #MList   <= (Type, {})
 
 #Map.Events[1].Name
-#Map.Events[1].Page[2].CodeBlock
+#Map.Events[1].Pages[2].CodeBlock
 
-CodeBlock = ()
+EventCommands = ()
 
-EventPage =  (MStruct, {'\x22': (MBlock,'Position',()),
+EventPage =  (MStruct, {'\x15': (MString,'TilePath',()),
+                        '\x22': (MBlock,'Position',()),
                         '\x24': (MBlock,'AniType',()),
                         '\x25': (MBlock,'Speed',()),
-                        '\x34': (MBlock,'CodeBlock',()),
+                        '\x34': (MBlock,'EventCommands',()),
                        }
              )
 
-Event = (MStruct, {'\x01': (MBlock,'Name',()),
+Event = (MStruct, {'\x01': (MString,'Name',()),
                     '\x02': (MBlock,'X',()),
                     '\x03': (MBlock,'Y',()),
-                    '\x05': (MList,'Page',EventPage),
+                    '\x05': (MList,'Pages',EventPage),
 
                   }
          )
@@ -173,9 +198,5 @@ if __name__ == '__main__':
     f = open(targetFile, 'rb')
     signature = f.read(11)
     Map = MStruct(f, MapMap[1])
-    print repr(Map.Events[3].Page[1].CodeBlock)
-    print repr(Map.Events[3].Page[2].CodeBlock)
-    print repr(Map.Events[3].Page[3].CodeBlock)
-    print repr(Map.Events[3].Page[4].CodeBlock)
-    print repr(Map.Events[3].Page[5].CodeBlock)
-    print repr(Map.Events[3].Page[6].CodeBlock)
+    print repr(Map)
+
