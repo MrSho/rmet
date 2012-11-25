@@ -50,12 +50,23 @@ class MBlock(object):
         return strInHex(self.data[:90])
     
 class MString(MBlock):
-
-    #Fix! Не показывает иероглифы!      
+     
     def __repr__(self, depth = 0):
         return self.data.decode(encoding='shift_jis_2004')
     
-class MEnum(MBlock): pass
+class MEnum(MBlock):
+    
+    def __repr__(self, depth = 0):
+        b = struct.unpack('B', self.data[0])[0]
+        try:
+            return self.Map[b]
+        except:
+            return strInHex(self.data[:90])
+        
+class MFlag(MBlock):
+     
+    def __repr__(self, depth = 0):
+        return repr(bool(struct.unpack('B', self.data[0])[0]))
 
 
 class MStruct(object):
@@ -107,7 +118,7 @@ class MStruct(object):
         return bd
     
     def __repr__(self, depth = 0):
-        s = str()
+        s = '\n'
         for id, b in sorted(self.blockDict.items()):
             id = MStruct.IDtoNameRepr(id, self.Map)
             s += '    ' * depth + id + ' : ' + b.__repr__(depth + 1) + '\n' 
@@ -139,7 +150,7 @@ class MList(object):
         s = '\n'
         for i, e in enumerate(self.elemList):
             if e:
-                s += '    ' * depth + '[' + str(i) + ']: ' + '\n'+  e.__repr__(depth + 1) 
+                s += '    ' * depth + '[' + str(i) + ']: ' + e.__repr__(depth + 1) 
         return s
 
 class MEventCommands(object):
@@ -159,6 +170,7 @@ class MEventCommands(object):
 #MMap    <= (Type, {})
 #MStruct <= {'ID': (Type, 'Name', {})}
 #MBlock  <= ()
+#MEnum <= ('Meaning 0', 'Meaning 1', 'Meaning 2')
 #MList   <= (Type, {})
 
 #Map.Events[1].Name
@@ -166,28 +178,56 @@ class MEventCommands(object):
 
 EventCommands = ()
 
-EventPage =  (MStruct, {'\x15': (MString,'TilePath',()),
-                        '\x22': (MBlock,'Position',()),
-                        '\x24': (MBlock,'AniType',()),
-                        '\x25': (MBlock,'Speed',()),
+Conditions = {}
+
+EventPage =  (MStruct, {'\x02': (MBlock,'Conditions', Conditions),
+                        '\x15': (MString,'TilePath',()),
+                        '\x16': (MBlock,'TileNum',()), #default: 0x00 #See TileNum.png
+                        '\x17': (MEnum,'FaceDirection',('Up','Right','Down','Left')),
+                        '\x18': (MEnum,'Pattern',('LEFT','MIDDLE', 'RIGHT')), #default: 0x01
+                        '\x19': (MFlag,'Transp.',()),
+                        '\x1f': (MEnum,'MovementType',('StayStill','RandomMovement', "CycleUp-Down",
+                                                       "CycleLeft-Right-Down",'StepTowardHero',
+                                                       'StepAwayFromHero', "ByItsRoute")),                        
+                        '\x20': (MBlock,'Frequency',()), #default: 0x03
+                        '\x21': (MEnum,'EventStartCondition',('PushKey', 'OnHeroTouch', 'OnTouch',
+                                                              'AutoStart', 'ParallelProcess')),
+                        '\x22': (MEnum,'Position',('BelowHero','SameLevelAsHero', 'OverHero')),
+                        '\x23': (MFlag,'AllowEventOverLap',()),
+                        '\x24': (MEnum,'AnimationType',('Common/WithoutStepping', 'Common/WithStepping',
+                                                        'WithoutStepping', 'FixedDirection', 'FixedGraphic',
+                                                        'TurnRight')),
+                        '\x25': (MEnum,'Speed',('','x8Slower', 'x4Slower', 'x2Slower', 'Normal', #default: 0x03
+                                                'x2Faster', 'x4Faster')),
+                        '\x33': (MBlock,'CommandsLenght',()),
                         '\x34': (MBlock,'EventCommands',()),
                        }
              )
 
 Event = (MStruct, {'\x01': (MString,'Name',()),
-                    '\x02': (MBlock,'X',()),
-                    '\x03': (MBlock,'Y',()),
-                    '\x05': (MList,'Pages',EventPage),
+                   '\x02': (MBlock,'X',()), #default: 0x00
+                   '\x03': (MBlock,'Y',()), #default: 0x00
+                   '\x05': (MList,'Pages',EventPage),
 
                   }
          )
 
 
-MapMap =  (MStruct, {'\x01': (MBlock,'ChipSet',()),
-                     '\x0b': (MBlock,'ScrollType',()),
+MapMap =  (MStruct, {'\x01': (MBlock,'ChipSet',()), #default: 0x01
+                     '\x02': (MBlock,'X',()), #default: 20
+                     '\x03': (MBlock,'Y',()), #default: 15
+                     '\x0b': (MEnum,'ScrollType',('None', 'VerticalLoop', 'HorizontalLoop', 'BothLoop')),                     
+                     '\x1f': (MFlag,'UseParralaxBackground',()), #default: 0x00
+                     '\x20': (MString,'BackgroundPath',()),
+                     '\x21': (MFlag,'HorizontalPan',()), #default: 0x00 
+                     '\x22': (MFlag,'VerticalPan',()), #default: 0x00
+                     '\x23': (MFlag,'HorizontalAutoScroll',()), #default: 0x00 
+                     '\x24': (MBlock,'HorizontalSpeed',()),
+                     '\x25': (MFlag,'VerticalAutoScroll',()), #default: 0x00 
+                     '\x26': (MBlock,'VerticalSpeed',()),   
                      '\x47': (MBlock,'LoTaleSet',()),
                      '\x48': (MBlock,'UpTaleSet',()),
-                     '\x51': (MList,'Events', Event),
+                     '\x51': (MList,'Events', Event), #default: Empty
                      '\x5b': (MBlock,'SaveCount',())
                     }
            )
@@ -198,5 +238,5 @@ if __name__ == '__main__':
     f = open(targetFile, 'rb')
     signature = f.read(11)
     Map = MStruct(f, MapMap[1])
-    print repr(Map)
+    print 'Map:' + repr(Map)
 
