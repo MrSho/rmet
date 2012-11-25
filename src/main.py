@@ -13,7 +13,7 @@ import Command
 #Глобальные константы
 VHgamePath = u'D:/аниме/хентай/bestiality^monster^tentacles/!VH/my try/\
 VHゲーム０１_121005_translated'
-targetFile = path.join(VHgamePath, u'Map0545.lmu')
+targetFile = path.join(VHgamePath, u'Map0020.lmu')
 
 
 #Читает закодированный размер блока   
@@ -38,12 +38,11 @@ def strInHex(string):
 
 class MBlock(object):
     
-    def __init__(self, fileObj, Map):
-        self.data = self.read(fileObj)
+    def __init__(self, fileObj, Map, size = 0):
+        self.data = self.read(fileObj, size)
         self.Map = Map
         
-    def read(self, fileObj):
-        size = getSize(fileObj)
+    def read(self, fileObj, size):
         return fileObj.read(size)
     
     def __repr__(self, depth = 0):
@@ -100,7 +99,7 @@ class MStruct(object):
         else:
             return MBlock
     
-    def __init__(self, fileObj, Map):
+    def __init__(self, fileObj, Map, size = 0):
         self.Map = Map
         self.blockDict = self.read(fileObj, Map)
        
@@ -110,7 +109,8 @@ class MStruct(object):
             ID = fileObj.read(1)
             if ID == '\x00': break            
             #Определяется
-            b = MStruct.getType(ID, Map)(fileObj, MStruct.getAnsMap(ID, Map))
+            size = getSize(fileObj)
+            b = MStruct.getType(ID, Map)(fileObj, MStruct.getAnsMap(ID, Map), size)
             Name = MStruct.IDtoName(ID, Map)
             bd[ID] = b
             setattr(self, Name, b) 
@@ -128,13 +128,12 @@ class MStruct(object):
 class MList(object):
     
     #MList   <= (Type, {})            
-    def __init__(self, fileObj, Map):
+    def __init__(self, fileObj, Map, size = 0):
         self.elemList = self.read(fileObj, Map)
     
     #Fix!    
     def read(self, fileObj, Map):
         el = [0] * 1000
-        size = getSize(fileObj)
         c = struct.unpack('B', fileObj.read(1))[0]
         for i in xrange(c):
             n = struct.unpack('B', fileObj.read(1))[0]
@@ -180,7 +179,7 @@ EventCommands = ()
 
 Conditions = {}
 
-EventPage =  (MStruct, {'\x02': (MBlock,'Conditions', Conditions),
+EventPage =  (MStruct, {'\x02': (MStruct,'Conditions', Conditions),
                         '\x15': (MString,'TilePath',()),
                         '\x16': (MBlock,'TileNum',()), #default: 0x00 #See TileNum.png
                         '\x17': (MEnum,'FaceDirection',('Up','Right','Down','Left')),
