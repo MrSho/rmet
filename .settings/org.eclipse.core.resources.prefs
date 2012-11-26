@@ -1,4 +1,5 @@
 eclipse.preferences.version=1
 encoding//src/Command.py=UTF-8
 encoding//src/main.py=UTF-8
-encoding//src/test/main_test.py=UTF-8
+encoding//src/misc.py=UTF-8
+encoding//src/test/misc_test.py=UTF-8

@@ -7,7 +7,7 @@ Created on 20.11.2012
 import unittest
 import StringIO
 
-import main
+import misc
 
 
 class getSizeTest(unittest.TestCase):
@@ -26,7 +26,7 @@ class getSizeTest(unittest.TestCase):
 
     def test_getSize(self):
         for i in xrange(6):
-            b = main.getSize(self.TestBuff)
+            b = misc.getFNum(self.TestBuff)
             self.assertEqual(b, self.outputTpl[i])
             
 
