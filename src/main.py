@@ -18,7 +18,7 @@ import command
 #Глобальные константы
 VHgamePath = u'D:/аниме/хентай/bestiality^monster^tentacles/!VH/my try/\
 VHゲーム０１_121005_translated'
-targetFile = path.join(VHgamePath, u'Map0545.lmu')
+
 
 reprLen = 120
     
@@ -146,6 +146,20 @@ class MList(object):
     def __getitem__(self, key):
         return self._elemList[key]
     
+    def get_elist(self):
+        return tuple('elem')
+    
+    def key_search(self, key, match):
+        'Ищет элементы в списке равные match по их полю key'
+        found_match = list()
+        for e in self._elemList:
+            try:
+                if repr(getattr(e, key)) == match:
+                    found_match.append(e)
+            except AttributeError: pass
+        return found_match
+            
+    
     def __repr__(self, depth=0):
         s = '\n'
         for i, e in enumerate(self._elemList):
@@ -195,7 +209,19 @@ class MEventCommands(object):
                 #break
         
         return CL, UD
-                           
+    
+    #Вручную убить интенды
+    def find_all_commands(self, command_class):
+        "возращает список команд интансированных от command_class"
+        found_commands = list()
+        for c in self._command_list:
+            if isinstance(c, command_class):
+                found_commands.append(repr(c).strip())
+        return found_commands
+    
+    def get_commands_by_frequency(self):
+        return tuple(tuple('number_of_use', 'command'))
+            
     def __repr__(self, depth=0):
         s = '\n'
         for e in self._command_list:
@@ -282,15 +308,22 @@ MapMap = (MStruct, {'\x01': (MBlock, 'ChipSet', ()), #default: 0x01
                     }
            )
                
+def print_all_calls(M, event, page):
+    block = M.Events[event].Pages[page].EventCommands
+    cl = block.find_all_commands(command.CallEvent)
+    for i in cl:
+        print i
 
-
+targetFile = path.join(VHgamePath, u'Map0253.lmu')
 if __name__ == '__main__':   
     f = open(targetFile, 'rb')
     signature = f.read(11)
     Map = MStruct(f, MapMap[1])
 
-    print 'Page 1:' + repr(Map.Events[3].Pages[1].EventCommands)
-    #print Map
+    #print 'Page 1:' + repr(Map.Events[3].Pages[1].EventCommands)
+    #print Map.Events[6]
+    
+    print_all_calls(Map, 6, 1)
 
 
 def lock(Map):

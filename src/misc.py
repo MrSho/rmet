@@ -61,9 +61,11 @@ def tab_token(depth):
     return u'    ' * depth
     
 
-def get_MVar_name(id): return u''
+def get_MVar_name(id): return ''
 
-def get_MSwitch_name(id): return u''
+def get_MSwitch_name(id): return ''
+
+def get_MCEvent_name(id): return ''
 
 
 

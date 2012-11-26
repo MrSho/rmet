@@ -4,7 +4,8 @@ Created on 24.11.2012
 
 @author: Sho
 '''
-from misc import get_fnum, get_fnum_str, str_in_hex, tab_token, get_MVar_name
+from misc import get_fnum, get_fnum_str, str_in_hex, tab_token,\
+                 get_MVar_name, get_MSwitch_name, get_MCEvent_name
 
 class CommandHandler(object):
     CCode = None
@@ -248,8 +249,84 @@ class InputNumber(CommandHandler):
         format_list.append(str(self._digit_num))
         format_list.append(str(self._variable))
         format_list.append(get_MVar_name(self._variable))                  
-        return format_string.format(*format_list)        
-           
+        return format_string.format(*format_list)
+    
+
+class ChangeSwitch(CommandHandler):
+    CCode = get_fnum_str('\xcf\x62')
+    _set_enum = ('ON Set', 'OFF Set', 'ON/OFF Triger')
+    
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._exprtype = 0
+        self._v1 = 0
+        self._v2 = 0
+        self._set = 0
+      
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._exprtype = self._numbers[0]
+        self._v1 = self._numbers[1]        
+        self._v2 = self._numbers[2] 
+        self._set = self._numbers[3]
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        if   self._exprtype == 0:
+            format_string = '{}<>Change Switch: [{}:{}]-{}\n'
+            format_list.append(str(self._v1))
+            format_list.append(get_MSwitch_name(self._v1))
+            format_list.append(self._set_enum[self._set])                        
+        elif self._exprtype == 1:
+            format_string = '{}<>Change Switch: [{}*{}]-{}\n'
+            format_list.append(str(self._v1))            
+            format_list.append(str(self._v2))
+            format_list.append(self._set_enum[self._set])                           
+        elif self._exprtype == 2:
+            format_string = '{}<>Change Switch: [V[{}:{}]]-{}\n'
+            format_list.append(str(self._v1))            
+            format_list.append(get_MVar_name(self._v1))
+            format_list.append(self._set_enum[self._set]) 
+                    
+        return format_string.format(*format_list)
+
+
+class CallEvent(CommandHandler):
+    CCode = get_fnum_str('\xe0\x2a')
+    
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._calltype = 0
+        self._event = 0
+        self._page = 0
+        
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._calltype = self._numbers[0]
+        self._event = self._numbers[1]
+        self._page = self._numbers[2]
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        if   self._calltype == 0:
+            format_string = '{}<>Call Event: {}:{}\n'
+            format_list.append(self._event)
+            format_list.append(get_MCEvent_name(self._event))
+        elif self._calltype == 1:
+            format_string = '{}<>Call Event: {}[{}]\n'
+            format_list.append(str(self._event))
+            format_list.append(str(self._page))
+        elif self._calltype == 2:
+            format_string = '{}<>Call Event: V[{}]:{}[V[{}]:{}]\n'
+            format_list.append(str(self._event))
+            format_list.append(get_MVar_name(self._event))
+            format_list.append(str(self._page))
+            format_list.append(get_MVar_name(self._page))            
+        return format_string.format(*format_list)                                         
+    
+               
 class Empty(CommandHandler):
     CCode = get_fnum_str('\x00')
     
