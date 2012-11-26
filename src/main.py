@@ -8,9 +8,11 @@ import StringIO
 import os
 import os.path as path
 import struct
+import timeit
+import glob
 
-from misc import get_fnum, get_fnum_str, str_in_hex
-import Command
+from misc import get_fnum, get_fnum_str, str_in_hex, get_fnum_count
+import command
 
 
 #Глобальные константы
@@ -153,8 +155,9 @@ class MList(object):
 
 
 class MEventCommands(object):
-    command_module = Command
+    command_module = command
     command_meta_class = command_module.CommandHandler
+    default_handler = command_module.Unknown
     end_handler = command_module.Empty
     handlers_dict = {}
     
@@ -177,16 +180,19 @@ class MEventCommands(object):
         CL = list()
         UD = ''
         while True:
-            CCode = get_fnum(file_obj)           
+            CCode, code_string = get_fnum_count(file_obj)           
             if self.handlers_dict.has_key(CCode):
                 h = self.handlers_dict[CCode]()
                 h.read(file_obj)
                 CL.append(h)
                 if isinstance(h, self.end_handler): break
             else:
-                readbytes = file_obj.tell() - start
-                UD = file_obj.read(size - readbytes)
-                break
+                h = self.default_handler(0, code_string)
+                h.read(file_obj)
+                CL.append(h)                
+                #readbytes = file_obj.tell() - start
+                #UD = code_string + file_obj.read(size - readbytes)
+                #break
         
         return CL, UD
                            
@@ -278,7 +284,16 @@ MapMap = (MStruct, {'\x01': (MBlock, 'ChipSet', ()), #default: 0x01
                
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':   
+    f = open(targetFile, 'rb')
+    signature = f.read(11)
+    Map = MStruct(f, MapMap[1])
+
+    print 'Page 1:' + repr(Map.Events[3].Pages[1].EventCommands)
+    #print Map
+
+
+def lock(Map):
     def replacer(S):
         S = S.replace('ce 7e 00 03 61 62 63 00', 'ShowMessage:abc,d=0')
         S = S.replace('ce 7e 01 03 61 62 63 00', 'ShowMessage:abc,d=1')
@@ -302,19 +317,14 @@ if __name__ == '__main__':
         S = S.replace('00 00 00 00', 'Empty')           
         return S
     
-    f = open(targetFile, 'rb')
-    signature = f.read(11)
-    Map = MStruct(f, MapMap[1])
     showstring = '{:<30}: {}'
     s1 = showstring.format('2xshowMessage\'abc\'+end', Map.Events[3].Pages[1].EventCommands)
     s2 = showstring.format('Case', Map.Events[3].Pages[2].EventCommands)
     s3 = showstring.format('Empty Case', Map.Events[3].Pages[3].EventCommands)
     s1 = replacer(s1)
-    s2 = replacer(s2)
-    print Map
-    #s3 = replacer(s3)
-#    print s1
-#    print s2
-#    print s3
-
-
+    s2 = replacer(s2)    
+    s3 = replacer(s3)
+    
+    print s1
+    print s2
+    print s3
