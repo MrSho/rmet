@@ -26,7 +26,7 @@ class getSizeTest(unittest.TestCase):
 
     def test_getSize(self):
         for i in xrange(6):
-            b = misc.getFNum(self.TestBuff)
+            b = misc.get_fnum(self.TestBuff)
             self.assertEqual(b, self.outputTpl[i])
             
 

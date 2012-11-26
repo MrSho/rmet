@@ -9,22 +9,25 @@ import StringIO
 
 HexRepr = 1 #0 - with 0x, 1 - without 0x
 
+
 #Читает закодированное число
 #!Fix : Есть отрицательные числа!!!   
-def getFNum(fileObj, summ = 0):
+def get_fnum(fileObj, summ = 0):
     b = struct.unpack('B', fileObj.read(1))[0]
     if 0b10000000 & b:
-        return getFNum(fileObj, summ * 0x80 + (0b01111111 & b))
+        return get_fnum(fileObj, summ * 0x80 + (0b01111111 & b))
     else:
         return summ * 0x80 + (0b01111111 & b)
+
     
-def getFNumStr(Str):
+def get_fnum_str(Str):
     SI = StringIO.StringIO(Str)
-    return getFNum(SI)
+    return get_fnum(SI)
+
 
 #Возвращает шестнадцатиричное представление для
 #для последовательности байтов в виде строки  
-def strInHex(string):
+def str_in_hex(string):
     if HexRepr:    
         s = str()
         for i in string:
@@ -44,7 +47,7 @@ def strInHex(string):
 
 
 #Fix!: Добавить во все месте, где используется отступы
-def tabToken(depth):
+def tab_token(depth):
     return '    ' * depth
     
 

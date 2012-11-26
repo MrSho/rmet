@@ -4,124 +4,124 @@ Created on 24.11.2012
 
 @author: Sho
 '''
-from misc import getFNum, getFNumStr, strInHex, tabToken
+from misc import get_fnum, get_fnum_str, str_in_hex, tab_token
 
 class CommandHandler(object):
     CCode = None
     
     def __init__(self, Dlvl): pass
     
-    def read(self, fileObj): pass
+    def read(self, file_obj): pass
     
     def __repr__(self, depth = 0): pass     
    
     
 class ShowMessage(CommandHandler):
-    CCode = getFNumStr('\xce\x7e')
+    CCode = get_fnum_str('\xce\x7e')
     
-    def __init__(self, Dlvl = 0): 
-        self.Dlvl = Dlvl
-        self.Message = ''
+    def __init__(self, dep_lvl = 0): 
+        self._dep_lvl = dep_lvl
+        self._message = ''
     
-    def read(self, fileObj): 
-        self.Dlvl = getFNum(fileObj)
-        Messagelen = getFNum(fileObj)
-        MessageBytes = fileObj.read(Messagelen)
-        self.Message = MessageBytes.decode(encoding='shift_jis_2004')
-        fileObj.read(1)        
+    def read(self, file_obj): 
+        self._dep_lvl = get_fnum(file_obj)
+        message_len = get_fnum(file_obj)
+        message_bytes = file_obj.read(message_len)
+        self._message = message_bytes.decode(encoding='shift_jis_2004')
+        file_obj.read(1)        
     
     def __repr__(self, depth = 0):
         FString = '{}<>Messg:{}\n'
-        return FString.format(tabToken(depth + self.Dlvl), self.Message)
+        return FString.format(tab_token(depth + self._dep_lvl), self._message)
     
 class ShowMessageContinue(ShowMessage):
-    CCode = getFNumStr('\x81\x9d\x0e')       
+    CCode = get_fnum_str('\x81\x9d\x0e')       
     
     def __repr__(self, depth = 0):
         FString = '{}:      :{}\n'
-        return FString.format(tabToken(depth + self.Dlvl), self.Message)  
+        return FString.format(tab_token(depth + self._dep_lvl), self._message)  
     
 class ShowChoise(CommandHandler):
-    CCode = getFNumStr('\xcf\x1c')
+    CCode = get_fnum_str('\xcf\x1c')
     
     def __init__(self, Dlvl = 0):
-        self.Dlvl = Dlvl
-        self.CaseMessage = ''
-        self.Unk1 = 0
-        self.CancelCase  = 0
+        self._dep_lvl = Dlvl
+        self._case_message = ''
+        self._unk1 = 0
+        self._cancel_case  = 0
     
-    def read(self, fileObj):
-        self.Dlvl = getFNum(fileObj)
-        Messagelen = getFNum(fileObj)
-        MessageBytes = fileObj.read(Messagelen)
-        self.CaseMessage = MessageBytes.decode(encoding='shift_jis_2004')
-        self.Unk1 = fileObj.read(1)
-        self.CancelCase = fileObj.read(1)
+    def read(self, file_obj):
+        self._dep_lvl = get_fnum(file_obj)
+        message_len = get_fnum(file_obj)
+        message_bytes = file_obj.read(message_len)
+        self._case_message = message_bytes.decode(encoding='shift_jis_2004')
+        self._unk1 = file_obj.read(1)
+        self._cancel_case = file_obj.read(1)
     
     def __repr__(self, depth = 0):
         FString = '{}<>Show Choise: {} C:{}\n' 
-        return FString.format(tabToken(depth + self.Dlvl), self.CaseMessage, strInHex(self.CancelCase))
+        return FString.format(tab_token(depth + self._dep_lvl), self._case_message, str_in_hex(self._cancel_case))
 
 class Case(CommandHandler):
-    CCode = getFNumStr('\x81\x9d\x2c')
+    CCode = get_fnum_str('\x81\x9d\x2c')
     
-    def __init__(self, Dlvl = 0):
-        self.Dlvl = Dlvl
-        self.CaseMessage = ''
-        self.Unk1 = 0
-        self.CaseNum = 0       
+    def __init__(self, dep_lvl = 0):
+        self._dep_lvl = dep_lvl
+        self._case_message = ''
+        self._unk1 = 0
+        self._case_num = 0       
     
-    def read(self, fileObj):
-        self.Dlvl = getFNum(fileObj)
-        Messagelen = getFNum(fileObj)
-        MessageBytes = fileObj.read(Messagelen)
-        self.CaseMessage = MessageBytes.decode(encoding='shift_jis_2004')
-        self.Unk1 = fileObj.read(1)
-        self.CaseNum = getFNum(fileObj)                       
+    def read(self, file_obj):
+        self._dep_lvl = get_fnum(file_obj)
+        message_len = get_fnum(file_obj)
+        message_bytes = file_obj.read(message_len)
+        self._case_message = message_bytes.decode(encoding='shift_jis_2004')
+        self._unk1 = file_obj.read(1)
+        self._case_num = get_fnum(file_obj)                       
     
     def __repr__(self, depth = 0): 
-        FString = '{}: [{}] Case\n'
-        if self.CaseNum == 4:
-            Message = 'CANCEL'
+        format_string = '{}: [{}] Case\n'
+        if self._case_num == 4:
+            message = 'CANCEL'
         else:
-            Message = self.CaseMessage
-        return FString.format(tabToken(depth + self.Dlvl), Message) 
+            message = self._case_message
+        return format_string.format(tab_token(depth + self._dep_lvl), message) 
     
 class EndCase(CommandHandler):
-    CCode = getFNumStr('\x81\x9d\x2d')
+    CCode = get_fnum_str('\x81\x9d\x2d')
     
-    def __init__(self, Dlvl = 0):
-        self.Dlvl = Dlvl
+    def __init__(self, dep_lvl = 0):
+        self._dep_lvl = dep_lvl
     
-    def read(self, fileObj):
-        self.Dlvl = getFNum(fileObj)
-        fileObj.read(2)
+    def read(self, file_obj):
+        self._dep_lvl = get_fnum(file_obj)
+        file_obj.read(2)
     
     def __repr__(self, depth = 0):
-        return tabToken(depth + self.Dlvl) + ':END Case\n'
+        return tab_token(depth + self._dep_lvl) + ':END Case\n'
 
 class CaseEmpty(CommandHandler):
-    CCode = getFNumStr('\x0a')
+    CCode = get_fnum_str('\x0a')
     
-    def __init__(self, Dlvl = 0):
-        self.Dlvl = Dlvl
+    def __init__(self, dep_lvl = 0):
+        self._dep_lvl = dep_lvl
     
-    def read(self, fileObj):
-        self.Dlvl = getFNum(fileObj)
-        fileObj.read(2)
+    def read(self, file_obj):
+        self._dep_lvl = get_fnum(file_obj)
+        file_obj.read(2)
     
     def __repr__(self, depth = 0):
-        return tabToken(depth + self.Dlvl) + '<>\n'     
+        return tab_token(depth + self._dep_lvl) + '<>\n'     
     
 class Empty(CommandHandler):
-    CCode = getFNumStr('\x00')
+    CCode = get_fnum_str('\x00')
     
-    def __init__(self, Dlvl = 0):
-        self.Dlvl = Dlvl
+    def __init__(self, dep_lvl = 0):
+        self._dep_lvl = dep_lvl
     
-    def read(self, fileObj):
-        self.Dlvl = getFNum(fileObj)
-        fileObj.read(2)        
+    def read(self, file_obj):
+        self._dep_lvl = get_fnum(file_obj)
+        file_obj.read(2)        
     
     def __repr__(self, depth = 0):
-        return tabToken(depth + self.Dlvl) + '<>\n'
+        return tab_token(depth + self._dep_lvl) + '<>\n'
