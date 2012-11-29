@@ -67,6 +67,9 @@ def get_MSwitch_name(id): return ''
 
 def get_MCEvent_name(id): return ''
 
+def get_Hero_name(id): return ''
+
+def get_Item_name(id): return ''
 
 
 

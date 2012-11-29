@@ -314,16 +314,16 @@ def print_all_calls(M, event, page):
     for i in cl:
         print i
 
-targetFile = path.join(VHgamePath, u'Map0253.lmu')
+targetFile = path.join(VHgamePath, u'Map0545.lmu')
 if __name__ == '__main__':   
     f = open(targetFile, 'rb')
     signature = f.read(11)
     Map = MStruct(f, MapMap[1])
 
-    #print 'Page 1:' + repr(Map.Events[3].Pages[1].EventCommands)
+    print 'Page 1:' + repr(Map.Events[3].Pages[1].EventCommands)
     #print Map.Events[6]
     
-    print_all_calls(Map, 6, 1)
+    #print_all_calls(Map, 6, 1)
 
 
 def lock(Map):

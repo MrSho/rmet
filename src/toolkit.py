@@ -1,47 +1,50 @@
+#coding: UTF-8
 '''
 Created on 26.11.2012
 
 @author: Sho
 '''
-'''
-class ChangeSwitch(CommandHandler):
-    CCode = get_fnum_str('\xcf\x62')
-    _set_enum = ('ON Set', 'OFF Set', 'ON/OFF Triger')
-    
-    def __init__(self):
-        CommandHandler.__init__(self)
-        self._exprtype = 0
-        self._v1 = 0
-        self._v2 = 0
-        self._set = 0
-      
-    def read(self, file_obj):
-        CommandHandler.read(self, file_obj)
-        self._exprtype = self._numbers[0]
-        self._v1 = self._numbers[1]        
-        self._v2 = self._numbers[2] 
-        self._set = self._numbers[3]
 
-    def __repr__(self, depth = 0):
-        format_list = list()
-        format_list.append(tab_token(depth + self._dep_lvl))
-        if   self._exprtype == 0:
-            format_string = '{}<>Change Switch: [{}:{}]-{}\n'
-            format_list.append(str(self._v1))
-            format_list.append(get_MSwitch_name(self._v1))
-            format_list.append(self._set_enum[self._set])                        
-        elif self._exprtype == 1:
-            format_string = '{}<>Change Switch: [{}*{}]-{}\n'
-            format_list.append(str(self._v1))            
-            format_list.append(str(self._v2))
-            format_list.append(self._set_enum[self._set])                           
-        elif self._exprtype == 2:
-            format_string = '{}<>Change Switch: [V[{}:{}]]-{}\n'
-            format_list.append(str(self._v1))            
-            format_list.append(get_MVar_name(self._v1))
-            format_list.append(self._set_enum[self._set]) 
-                    
-        return format_string.format(*format_list)
-'''
+int = 0
+enum = 1
 
-def generate_handler_class(name, code, message, string_name, (var_name1, t), (var_name1, t)): pass
+def generate_handler_class(name, code, message, string_name, *vars):
+    indent = '    ' 
+    print 'class {}(CommandHandler):'.format(name)
+    print indent + 'CCode = get_fnum_str(\'{}\')'.format(code)
+    for varname, vartype in vars:
+        if vartype == enum:
+            print indent + '_{}_enum = (\'\', \'\')'.format(varname)
+    print
+    print indent + 'def __init__(self):'
+    print indent * 2 + 'CommandHandler.__init__(self)'
+    if string_name:
+        print indent * 2 + 'self._{} = \'\''.format(string_name)
+    for varname, vartype in vars:
+        print indent * 2 + 'self._{} = 0'.format(varname)
+    print
+    print indent + 'def read(self, file_obj):'
+    print indent * 2 + 'CommandHandler.read(self, file_obj)' 
+    if string_name:
+        print indent * 2 + 'self._{} = self._string'.format(string_name)
+    for i, e in enumerate(vars):
+        varname = e[0]
+        vartype = e[1]
+        print indent * 2 + 'self._{} = self._numbers[{}]'.format(varname, str(i))
+    print
+    print indent + 'def __repr__(self, depth = 0):'
+    print indent * 2 + 'format_list = list()'
+    print indent * 2 + 'format_list.append(tab_token(depth + self._dep_lvl))'
+    print indent * 2 + "format_string = '{}" + '<>{}:'.format(message) + \
+         '{} ' * (len(vars) + bool(string_name)) + "'\\n"
+    print
+    if string_name:
+        print indent * 2 + 'format_list.append(self._{})'.format(string_name)
+    print
+    for varname, vartype in vars:
+        if vartype == enum:
+            print indent * 2 + 'format_list.append(self._{}_enum[self._{}])'\
+                .format(varname, varname)
+        else:
+            print indent * 2 + 'format_list.append(str(self._{}))'.format(varname)
+    print indent * 2 + 'return format_string.format(*format_list)'

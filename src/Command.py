@@ -4,8 +4,7 @@ Created on 24.11.2012
 
 @author: Sho
 '''
-from misc import get_fnum, get_fnum_str, str_in_hex, tab_token,\
-                 get_MVar_name, get_MSwitch_name, get_MCEvent_name
+from misc import *
 
 class CommandHandler(object):
     CCode = None
@@ -30,13 +29,13 @@ class CommandHandler(object):
 class Unknown(CommandHandler):
     
     def __repr__(self, depth = 0): 
-        format_string = '{}<>Unknown: {}  d:{}  sl:{} \'{}\'  nc:{}  {}\n'
+        format_string = '{}<>Unknown: {} \'{}\'  n:{}  {}\n'
         format_list = list()    
         format_list.append(tab_token(depth + self._dep_lvl))
         
         format_list.append(str_in_hex(self._code_string))
-        format_list.append(str(self._dep_lvl)) 
-        format_list.append(str(len(self._string)))     
+        #format_list.append(str(self._dep_lvl)) 
+        #format_list.append(str(len(self._string)))     
         format_list.append(self._string)
         
         format_list.append(str(len(self._numbers)))
@@ -291,6 +290,125 @@ class ChangeSwitch(CommandHandler):
                     
         return format_string.format(*format_list)
 
+
+class ChangeVariable(CommandHandler):
+    CCode = get_fnum_str('\xcf\x6c')
+    _settype_enum = ('Set', '+', '-', '*', '/', 'Mod')
+    
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._vartype = 0
+        self._targetvar1 = 0
+        self._targetvar2 = 0
+        self._settype = 0
+        self._operandtype = 0
+        self._operand1 = 0
+        self._operand2 = 0
+        
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._vartype = self._numbers[0]
+        self._targetvar1 = self._numbers[1]
+        self._targetvar2 = self._numbers[2]
+        self._settype = self._numbers[3]
+        self._operandtype = self._numbers[4]
+        self._operand1 = self._numbers[5]
+        self._operand2 = self._numbers[6]
+        
+    def __repr__(self, depth = 0):
+        sformat_list = list()
+        sformat_list.append(tab_token(depth + self._dep_lvl))
+        sformat_string = '{}<>Variable Ch:{} {}, {}\n'
+        
+        vformat_list = list()       
+        if self._vartype == 0:
+            vformat_string = '[{}:{}]'
+            vformat_list.append(str(self._targetvar1))
+            vformat_list.append(get_MVar_name(self._targetvar1))
+        elif self._vartype == 1:
+            vformat_string = '[{}*{}]'
+            vformat_list.append(str(self._targetvar1))
+            vformat_list.append(str(self._targetvar2))
+        elif self._vartype == 2:
+            vformat_string = '[V[{}]]'
+            vformat_list.append(str(self._targetvar1))
+        sformat_list.append(vformat_string.format(*vformat_list))
+        
+        sformat_list.append(self._settype_enum[self._settype])
+        
+        oformat_list = list()
+        if self._operandtype == 0:
+            oformat_string = '{}'
+            oformat_list.append(str(self._operand1))
+        elif self._operandtype == 1:
+            oformat_string = 'Var.[{}]val'
+            oformat_list.append(str(self._operand1))
+        elif self._operandtype == 2:
+            oformat_string = 'Var.[V[{}]]val'
+            oformat_list.append(str(self._operand1))
+        elif self._operandtype == 3:
+            oformat_string = 'Randm[{}*{}]'
+            oformat_list.append(str(self._operand1))
+            oformat_list.append(str(self._operand2))                    
+        elif self._operandtype == 4:
+            oformat_string = '{} - {}'
+            oformat_list.append(str(self._operand1))
+            oformat_list.append(str(self._operand2)) 
+        elif self._operandtype == 5:
+            oformat_string = '{} - {}'
+            oformat_list.append(str(self._operand1))
+            oformat_list.append(str(self._operand2)) 
+        elif self._operandtype == 6:
+            oformat_string = '{} - {}'
+            oformat_list.append(str(self._operand1))
+            oformat_list.append(str(self._operand2)) 
+        elif self._operandtype == 7:
+            oformat_string = '{}'
+            oformat_list.append(str(self._operand1))
+        sformat_list.append(oformat_string.format(*oformat_list))            
+        
+        return sformat_string.format(*sformat_list)
+
+        
+class TimerOperations(CommandHandler):
+    CCode = get_fnum_str('\xcf\x76')
+    _settype_enum = ('Create', 'StartTmr', 'StopTmr')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._settype = 0
+        self._operandtype = 0
+        self._operand = 0
+        self._displaytimer = 0
+        self._availableinbattle = 0
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._settype = self._numbers[0]
+        self._operandtype = self._numbers[1]
+        self._operand = self._numbers[2]
+        self._displaytimer = self._numbers[3]
+        self._availableinbattle = self._numbers[4]
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}<>Timer Operation:{}\n'
+        format_list.append(self._settype_enum[self._settype])
+        if self._settype == 0:
+            format_string = '{}<>Timer Operation:{} {}\n'
+            if not self._operandtype:
+                format_list.append(str(self._operand) + ' sec')
+            else:
+                format_list.append('V[' + str(self._operand) + ']')
+                            
+        elif self._settype == 1:
+            format_string = '{}<>Timer Operation:{} {} {}\n'
+            format_list.append(str(self._displaytimer))
+            format_list.append(str(self._availableinbattle))
+        return format_string.format(*format_list)
+                   
+        
 
 class CallEvent(CommandHandler):
     CCode = get_fnum_str('\xe0\x2a')
