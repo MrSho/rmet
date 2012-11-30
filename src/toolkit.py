@@ -36,7 +36,7 @@ def generate_handler_class(name, code, message, string_name, *vars):
     print indent * 2 + 'format_list = list()'
     print indent * 2 + 'format_list.append(tab_token(depth + self._dep_lvl))'
     print indent * 2 + "format_string = '{}" + '<>{}:'.format(message) + \
-         '{} ' * (len(vars) + bool(string_name)) + "'\\n"
+         '{} ' * (len(vars) + bool(string_name)) + "\\n'"
     print
     if string_name:
         print indent * 2 + 'format_list.append(self._{})'.format(string_name)
