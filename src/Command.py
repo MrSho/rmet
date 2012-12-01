@@ -546,7 +546,97 @@ class ChangeExp(CommandHandler):
         else:
             format_list.append('')
         return format_string.format(*format_list)
+
+
+class ChangeLvl(CommandHandler):
+    CCode = get_fnum_str('\xd1\x34')
+    _settype_enum = ('Incr.', 'Decr.')    
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._targettype = 0
+        self._target = 0
+        self._settype = 0
+        self._operandtype = 0
+        self._operand = 0
+        self._showlvlmessg = 0
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._targettype = self._numbers[0]
+        self._target = self._numbers[1]
+        self._settype = self._numbers[2]
+        self._operandtype = self._numbers[3]
+        self._operand = self._numbers[4]
+        self._showlvlmessg = self._numbers[5]
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}<>Change Level: {:<15} Level {:>10} {} {}\n'
+        if self._targettype == 0:
+            format_list.append('All Members')
+        elif self._targettype == 1:
+            format_list.append(get_Hero_name(self._target))
+        elif self._targettype == 2:
+            format_list.append('V[{}]'.format(str(self._target)))
         
+        if not self._operandtype:
+            format_list.append(str(self._operand))
+        else:
+            format_list.append('V[{}]'.format(str(self._operand)))
+            
+        format_list.append(self._settype_enum[self._settype])
+        if self._showlvlmessg:
+            format_list.append('Show')
+        else:
+            format_list.append('')
+        return format_string.format(*format_list)        
+
+
+class ChangeAbility(CommandHandler):
+    CCode = get_fnum_str('\xd1\x3e')
+    _settype_enum = ('Incr.', 'Decr.')
+    _abilitytype_enum = ('Max HP', 'Max MP', 'Attack', 'Defense', 'Mind', 'Agility')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._targettype = 0
+        self._target = 0
+        self._settype = 0
+        self._abilitytype = 0
+        self._operandtype = 0
+        self._operand = 0
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._targettype = self._numbers[0]
+        self._target = self._numbers[1]
+        self._settype = self._numbers[2]
+        self._abilitytype = self._numbers[3]
+        self._operandtype = self._numbers[4]
+        self._operand = self._numbers[5]
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}<>ChangeAbility:{} {}->{} {}\n'
+        if self._targettype == 0:
+            format_list.append('All Members')
+        elif self._targettype == 1:
+            format_list.append(get_Hero_name((self._target)))
+        elif self._targettype == 2:
+            format_list.append('V[{}]'.format(str(self._target)))
+        format_list.append(self._abilitytype_enum[self._abilitytype])
+        
+        if not self._operandtype:
+            format_list.append(str(self._operand))
+        else:
+            format_list.append('V[{}]'.format(str(self._operand)))
+
+        format_list.append(self._settype_enum[self._settype])
+        return format_string.format(*format_list)
+
 
 class CallEvent(CommandHandler):
     CCode = get_fnum_str('\xe0\x2a')
@@ -581,6 +671,9 @@ class CallEvent(CommandHandler):
             format_list.append(str(self._page))
             format_list.append(get_MVar_name(self._page))            
         return format_string.format(*format_list)                                         
+
+  
+
     
                
 class Empty(CommandHandler):
