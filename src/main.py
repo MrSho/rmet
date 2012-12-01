@@ -11,7 +11,8 @@ import struct
 import timeit
 import glob
 
-from misc import get_fnum, get_fnum_str, str_in_hex, get_fnum_count
+import misc
+from misc import *
 import command
 
 
@@ -109,9 +110,11 @@ class MStruct(object):
         bd = {}
         while True:
             ID = file_obj.read(1)
-            if ID == '\x00': break            
+            if ID == '\x00' or ID == '': break            
             #Определяется
             size = get_fnum(file_obj)
+            #print 'Reading segment id={}, size={}, offset={}'.format(str_in_hex(ID),
+            #                                     str(size), str(file_obj.tell()))
             b = MStruct.getType(ID, map)(file_obj, MStruct.getAnsMap(ID, map), size)
             Name = MStruct.IDtoName(ID, map)
             bd[ID] = b
@@ -135,10 +138,10 @@ class MList(object):
     
     #Fix!    
     def read(self, file_obj, map):
-        el = [0] * 1000
-        c = struct.unpack('B', file_obj.read(1))[0]
+        el = [0] * 5001
+        c = get_fnum(file_obj)
         for i in xrange(c):
-            n = struct.unpack('B', file_obj.read(1))[0]
+            n = get_fnum(file_obj)
             el[n] = map[0](file_obj, map[1])
                           
         return el
@@ -234,7 +237,6 @@ class MEventCommands(object):
 MEventCommands.installHandlersDict()
         
 
-
 #MMap    <= (Type, {})
 #MStruct <= {'ID': (Type, 'Name', {})}
 #MBlock  <= ()
@@ -307,23 +309,91 @@ MapMap = (MStruct, {'\x01': (MBlock, 'ChipSet', ()), #default: 0x01
                      '\x5b': (MNum, 'SaveCount', ())
                     }
            )
+
+HeroList = (MStruct, {'\x01': (MString, 'Name', ())
+                      }
+            )
+
+SkillsList = (MStruct, {'\x01': (MString, 'Name', ())
+                      }
+            )
+
+ItemList = (MStruct, {'\x01': (MString, 'Name', ())
+                      }
+            )
+
+MonsterList = (MStruct, {'\x01': (MString, 'Name', ())
+                      }
+            )
+
+MonsterPartyList = (MStruct, {'\x01': (MString, 'Name', ())
+                             }
+                   )
+
+SwitchList = (MStruct, {'\x01': (MString, 'Name', ())
+                      }
+            )
+
+VarsList = (MStruct, {'\x01': (MString, 'Name', ())
+                      }
+            )
+
+CEventList = (MStruct, {'\x01': (MString, 'Name', ()),
+                        '\x15': (MBlock, 'CommandsLenght', ()),
+                        '\x16': (MEventCommands, 'EventCommands', ()),
+                      }
+            )
+
+UnkStruct = (MStruct, {})
+
+
+
+#Вычитаем 5
+MapDB = (MStruct, {'\x0b': (MList, 'Hero', HeroList),
+                   '\x0c': (MList, 'Skills', SkillsList),
+                   '\x0d': (MList, 'Items', ItemList),
+                   '\x0e': (MList, 'Monsters', MonsterList),
+                   '\x0f': (MList, 'MonstersParty', MonsterPartyList),
+                   '\x10': (MList, 'Terrain', UnkStruct),
+                   '\x11': (MList, 'Attributes', UnkStruct),
+                   '\x12': (MList, 'Conditions', UnkStruct),
+                   '\x13': (MList, 'BattleAnimation', UnkStruct),
+                   '\x14': (MList, 'ChipSets', UnkStruct),
+                   '\x17': (MList, 'Switch', SwitchList),
+                   '\x18': (MList, 'Vars', VarsList),
+                   '\x19': (MList, 'CEvents', CEventList),
+                   }
+         )
+
                
 def print_all_calls(M, event, page):
     block = M.Events[event].Pages[page].EventCommands
     cl = block.find_all_commands(command.CallEvent)
     for i in cl:
         print i
+        
+def get_maps_list(): pass
 
-targetFile = path.join(VHgamePath, u'Map0545.lmu')
-if __name__ == '__main__':   
+def read_map(map_name):
+    targetFile = path.join(VHgamePath, map_name)   
     f = open(targetFile, 'rb')
     signature = f.read(11)
     Map = MStruct(f, MapMap[1])
+    return Map
 
+
+def read_db():
+    targetFile = path.join(VHgamePath, u'RPG_RT.ldb')   
+    f = open(targetFile, 'rb')    
+    signature = f.read(12)
+    misc.DB = MStruct(f, MapDB[1])
+    return misc.DB
+                
+
+if __name__ == '__main__':
+    DB = read_db()
+    Map = read_map(u'Map0545.lmu')
     print 'Page 1:' + repr(Map.Events[3].Pages[1].EventCommands)
-    #print Map.Events[6]
-    
-    #print_all_calls(Map, 6, 1)
 
 
 def lock(Map):

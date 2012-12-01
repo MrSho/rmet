@@ -59,18 +59,38 @@ def str_in_hex(string):
 #Fix!: Добавить во все месте, где используется отступы
 def tab_token(depth):
     return u'    ' * depth
-    
 
-def get_MVar_name(id): return 'VarName'
+DB = None    
 
-def get_MSwitch_name(id): return 'SwitchName'
+def get_MVar_name(id):
+    try:
+        return DB.Vars[id].Name
+    except:
+        return 'UnresolvedVarName'
 
-def get_MCEvent_name(id): return 'CEventname'
+def get_MSwitch_name(id): 
+    try:
+        return DB.Switch[id].Name
+    except:
+        return 'UnresolvedSwitchName'
 
-def get_Hero_name(id): return 'HeroName'
+def get_MCEvent_name(id):
+    try: 
+        return DB.CEvents[id].Name
+    except:
+        return 'UnresolvedCEventname'
 
-def get_Item_name(id): return 'ItemName'
+def get_Hero_name(id):
+    try: 
+        return DB.Hero[id].Name
+    except:
+        return 'UnresolvedHeroName'
 
+def get_Item_name(id):
+    try: 
+        return DB.Items[id].Name
+    except:
+        return 'UnresolvedItemName'
 
 
 if __name__ == '__main__':
