@@ -399,10 +399,10 @@ def save_str_to_file(filepath, str):
 
 if __name__ == '__main__':
     DB = read_db()
-    Map = read_map(u'Map0021.lmu')
-    print "CEvent 325:" + repr(DB.CEvents[325].EventCommands)
-    save_str_to_file('c:/copu.txt', repr(DB.CEvents[325].EventCommands))
-    
+    Map = read_map(u'Map0545.lmu')
     #print 'Page: ' + repr(Map.Events[3].Pages[1].EventCommands)
-    print 'Page: ' + repr(Map.Events[9].Pages[9].EventCommands)
+    
+    print "CEvent 2:" + repr(DB.CEvents[2].EventCommands)
+    #save_str_to_file('c:/copu.txt', repr(DB.CEvents[325].EventCommands))
+
 

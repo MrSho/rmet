@@ -294,10 +294,16 @@ class ChangeSwitch(CommandHandler):
                     
         return format_string.format(*format_list)
 
-
+#!FIX Not Complete
 class ChangeVariable(CommandHandler):
     CCode = get_fnum_str('\xcf\x6c')
-    _settype_enum = ('Set', '+', '-', '*', '/', 'Mod')
+    _settype_enum = (':=', '+=', '-=', '*=', '/=', 'Mod=')
+    _heroattr_enum = ('Level',  'EXP', 'HP', 'MP',
+                      'Max HP', 'Max MP', 'Attack', 'Defense', 'Mind', 'Agility',
+                      'Weapon', 'Shield', 'Armor', 'Helmet', 'Misc')
+    _event_dict = {10001: 'Hero', 10005: 'thisEvent'}
+    _itemattr_enum = ('HoldNum', 'EquipNum')
+    _evetnattr_enum = ('MapID', 'Xpos', 'Ypos', 'Dire?', 'PicsX', 'PicsY')
     
     def __init__(self):
         CommandHandler.__init__(self)
@@ -322,7 +328,7 @@ class ChangeVariable(CommandHandler):
     def __repr__(self, depth = 0):
         sformat_list = list()
         sformat_list.append(tab_token(depth + self._dep_lvl))
-        sformat_string = '{}<>Variable Ch:{} {}, {}\n'
+        sformat_string = '{}<>Variable Ch: {} {} {}\n'
         
         vformat_list = list()       
         if self._vartype == 0:
@@ -334,8 +340,9 @@ class ChangeVariable(CommandHandler):
             vformat_list.append(str(self._targetvar1))
             vformat_list.append(str(self._targetvar2))
         elif self._vartype == 2:
-            vformat_string = '[V[{}]]'
+            vformat_string = '[V[{}:{}]]'
             vformat_list.append(str(self._targetvar1))
+            vformat_list.append(get_MVar_name((self._targetvar1)))
         sformat_list.append(vformat_string.format(*vformat_list))
         
         sformat_list.append(self._settype_enum[self._settype])
@@ -345,29 +352,31 @@ class ChangeVariable(CommandHandler):
             oformat_string = '{}'
             oformat_list.append(str(self._operand1))
         elif self._operandtype == 1:
-            oformat_string = 'Var.[{}]val'
+            oformat_string = 'Var.[{}:{}]val'
             oformat_list.append(str(self._operand1))
+            oformat_list.append(get_MVar_name(self._operand1))
         elif self._operandtype == 2:
-            oformat_string = 'Var.[V[{}]]val'
+            oformat_string = 'Var.[V[{}:{}]]val'
             oformat_list.append(str(self._operand1))
+            oformat_list.append(get_MVar_name(self._operand1))
         elif self._operandtype == 3:
             oformat_string = 'Randm[{}*{}]'
             oformat_list.append(str(self._operand1))
             oformat_list.append(str(self._operand2))                    
         elif self._operandtype == 4:
-            oformat_string = '{} - {}'
-            oformat_list.append(str(self._operand1))
-            oformat_list.append(str(self._operand2)) 
+            oformat_string = 'It. {} {}'
+            oformat_list.append(get_Item_name(self._operand1))
+            oformat_list.append(self._itemattr_enum[self._operand2]) 
         elif self._operandtype == 5:
-            oformat_string = '{} - {}'
-            oformat_list.append(str(self._operand1))
-            oformat_list.append(str(self._operand2)) 
+            oformat_string = '{}[{}]'
+            oformat_list.append(get_Hero_name(self._operand1))
+            oformat_list.append(self._heroattr_enum[self._operand2]) 
         elif self._operandtype == 6:
-            oformat_string = '{} - {}'
-            oformat_list.append(str(self._operand1))
-            oformat_list.append(str(self._operand2)) 
+            oformat_string = 'Ev.{}[{}]'
+            oformat_list.append(self._event_dict.get(self._operand1, str(self._operand1)))
+            oformat_list.append(self._evetnattr_enum[self._operand2]) 
         elif self._operandtype == 7:
-            oformat_string = '{}'
+            oformat_string = '7 {}'
             oformat_list.append(str(self._operand1))
         sformat_list.append(oformat_string.format(*oformat_list))            
         
@@ -641,6 +650,129 @@ class ChangeAbility(CommandHandler):
         return format_string.format(*format_list)
 
 
+class ShowPicture(CommandHandler):
+    CCode = get_fnum_str('\xd6\x66')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._picturepath = ''
+        self._picnumber = 0
+        self._coordstype = 0
+        self._x = 0
+        self._y = 0
+        self._movewithmap = 0
+        self._magnification = 0
+        self._transpatency = 0
+        self._transptype = 0
+        self._red = 0
+        self._green = 0
+        self._blue = 0
+        self._chroma = 0
+        self._effectype = 0
+        self._effectvalue = 0
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._picturepath = self._string
+        self._picnumber = self._numbers[0]
+        self._coordstype = self._numbers[1]
+        self._x = self._numbers[2]
+        self._y = self._numbers[3]
+        self._movewithmap = self._numbers[4]
+        self._magnification = self._numbers[5]
+        self._transpatency = self._numbers[6]
+        self._transptype = self._numbers[7]
+        self._red = self._numbers[8]
+        self._green = self._numbers[9]
+        self._blue = self._numbers[10]
+        self._chroma = self._numbers[11]
+        self._effectype = self._numbers[12]
+        self._effectvalue = self._numbers[13]
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        if not self._coordstype:
+            format_string = '{}<>Show Picture: {}, {}, ({}, {})\n'
+            format_list.append(str(self._picnumber))
+            format_list.append(self._picturepath)
+            format_list.append(str(self._x))
+            format_list.append(str(self._y))
+        else:
+            format_string = '{}<>Show Picture: {}, {}, (V[{}:{}] V[{}:{}])\n'
+            format_list.append(str(self._picnumber))
+            format_list.append(self._picturepath)
+            format_list.append(str(self._x))
+            format_list.append(get_MVar_name(self._x))
+            format_list.append(str(self._y))
+            format_list.append(get_MVar_name(self._y))
+        return format_string.format(*format_list)
+
+
+class MovePicture(CommandHandler):
+    CCode = get_fnum_str('\xd6\x70')
+    _wait_enum = ('', '(W)')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._picnumber = 0
+        self._coordstype = 0
+        self._x = 0
+        self._y = 0
+        self._movewithmap = 0
+        self._magnification = 0
+        self._transpatency = 0
+        self._transptype = 0
+        self._red = 0
+        self._green = 0
+        self._blue = 0
+        self._chroma = 0
+        self._effectype = 0
+        self._effectvalue = 0
+        self._time = 0
+        self._wait = 0
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._picnumber = self._numbers[0]
+        self._coordstype = self._numbers[1]
+        self._x = self._numbers[2]
+        self._y = self._numbers[3]
+        self._movewithmap = self._numbers[4]
+        self._magnification = self._numbers[5]
+        self._transpatency = self._numbers[6]
+        self._transptype = self._numbers[7]
+        self._red = self._numbers[8]
+        self._green = self._numbers[9]
+        self._blue = self._numbers[10]
+        self._chroma = self._numbers[11]
+        self._effectype = self._numbers[12]
+        self._effectvalue = self._numbers[13]
+        self._time = self._numbers[14]
+        self._wait = self._numbers[15]        
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        if not self._coordstype:
+            format_string = '{}<>Move Picture: {}, ({}, {}) {}sec {}\n'
+            format_list.append(str(self._picnumber))
+            format_list.append(str(self._x))
+            format_list.append(str(self._y))
+            format_list.append(str(self._time / 10.0))
+            format_list.append(self._wait_enum[self._wait])
+        else:
+            format_string = '{}<>Move Picture: {}, (V[{}:{}] V[{}:{}]) {}sec {}\n'
+            format_list.append(str(self._picnumber))
+            format_list.append(str(self._x))
+            format_list.append(get_MVar_name(self._x))
+            format_list.append(str(self._y))
+            format_list.append(get_MVar_name(self._y))
+            format_list.append(str(self._time / 10.0))
+            format_list.append(self._wait_enum[self._wait])
+        return format_string.format(*format_list)
+
+
 class ErasePicture(CommandHandler):
     CCode = get_fnum_str('\xd6\x7a')
 
@@ -658,6 +790,151 @@ class ErasePicture(CommandHandler):
         format_string = '{}<>Erase Picture :  {} \n'
         format_list.append(str(self._picnumber))
         return format_string.format(*format_list)
+
+
+class SetHeroTrans(CommandHandler):
+    CCode = get_fnum_str('\xd8\x2e')
+    _Trans_enum = ('Transparent', 'Non-Transparent')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._Trans = 0
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._Trans = self._numbers[0]
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = "{}<>Set Hero's Opacity:  {} \n"
+
+
+        format_list.append(self._Trans_enum[self._Trans])
+        return format_string.format(*format_list)
+
+
+class MoveEvent(CommandHandler):
+    CCode = get_fnum_str('\xd8\x42')
+    _event_dict = {10001: 'Hero', 10005: 'thisEvent'}
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._event = 0
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._event = self._numbers[0]
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}<>Move Event...: Event: {} !NO PATH!\n'
+
+        format_list.append(self._event_dict.get(self._event, str(self._event)))
+        return format_string.format(*format_list)
+
+
+class MoveAll(CommandHandler):
+    CCode = get_fnum_str('\xd8\x4c')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}<>Move All\n'
+        return format_string.format(*format_list)
+
+
+class StopAll(CommandHandler):
+    CCode = get_fnum_str('\xd8\x56')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}<>Stop All\n'
+
+
+        return format_string.format(*format_list)
+
+
+class Wait(CommandHandler):
+    CCode = get_fnum_str('\xd9\x12')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._time = 0
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._time = self._numbers[0]
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}<>Wait:   {}s\n'
+
+        format_list.append(str(self._time / 10.0))
+        return format_string.format(*format_list)
+
+
+class PlaySE(CommandHandler):
+    CCode = get_fnum_str('\xda\x1e')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._soundpath = ''
+        self._volume = 0
+        self._tempo = 0
+        self._balance = 0
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._soundpath = self._string
+        self._volume = self._numbers[0]
+        self._tempo = self._numbers[1]
+        self._balance = self._numbers[2]
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}<>Play SE: {}\n'
+        format_list.append(self._soundpath)
+        return format_string.format(*format_list)
+
+
+class DisableMenu(CommandHandler):
+    CCode = get_fnum_str('\xdd\x38')
+    _enable_enum = ('Disable', 'Enable')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._enable = 0
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._enable = self._numbers[0]
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}<>Disable System Menu:  {} \n'
+
+
+        format_list.append(self._enable_enum[self._enable])
+        return format_string.format(*format_list)
+
 
 #!FIX Not Complete
 class Fork(CommandHandler):
@@ -696,18 +973,18 @@ class Fork(CommandHandler):
             format_list.append(self._switch_state_enum[self._operand2])
         elif self._forktype == 1:
             if not self._operand2:
-                format_string = '{}<>FORK Optn:Varbl [{}:{}]- {} {}\n'
+                format_string = '{}<>FORK Optn:Varbl [{}:{}] {} {}\n'
                 format_list.append(str(self._operand1))
                 format_list.append(get_MVar_name(self._operand1))
-                format_list.append(str(self._operand3))
                 format_list.append(self._equas_enum[self._operand4])
+                format_list.append(str(self._operand3))
             else:
-                format_string = '{}<>FORK Optn:Varbl [{}:{}]- V[{}:{}] {}\n'
+                format_string = '{}<>FORK Optn:Varbl [{}:{}] V[{}:{}] {}\n'
                 format_list.append(str(self._operand1))
                 format_list.append(get_MVar_name(self._operand1))
                 format_list.append(str(self._operand3))
-                format_list.append(get_MVar_name(self._operand3))
                 format_list.append(self._equas_enum[self._operand4])
+                format_list.append(get_MVar_name(self._operand3))
         elif self._forktype == 2:
             format_string = '{}<>FORK Optn: Timer {}s {}\n'
             format_list.append(self._operand1)
@@ -763,6 +1040,62 @@ class EndForkCase(CommandHandler):
         format_list = list()
         format_list.append(tab_token(depth + self._dep_lvl))
         format_string = '{}:END Case\n'
+
+
+        return format_string.format(*format_list)
+
+
+class Label(CommandHandler):
+    CCode = get_fnum_str('\xde\x4e')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._labelnum = 0
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._labelnum = self._numbers[0]
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}<>LABEL: {}No\n'
+        format_list.append(str(self._labelnum))
+        return format_string.format(*format_list)
+
+
+class GoToLabel(CommandHandler):
+    CCode = get_fnum_str('\xde\x58')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._labelnum = 0
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._labelnum = self._numbers[0]
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}<>GO TO Label: {}No \n'
+        format_list.append(str(self._labelnum))
+        return format_string.format(*format_list)
+
+
+class StopParallEvents(CommandHandler):
+    CCode = get_fnum_str('\xe0\x16')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}<>Stop Parallel Events\n'
 
 
         return format_string.format(*format_list)
