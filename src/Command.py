@@ -58,7 +58,10 @@ class ShowMessage(CommandHandler):
         self._dep_lvl = get_fnum(file_obj)
         message_len = get_fnum(file_obj)
         message_bytes = file_obj.read(message_len)
-        self._message = message_bytes.decode(encoding='shift_jis_2004')
+        try:
+            self._message = message_bytes.decode(encoding='shift_jis_2004')
+        except UnicodeDecodeError:
+            self._message = '!!!UnicodeDecodeError!!!'
         file_obj.read(1)        
     
     def __repr__(self, depth = 0):
@@ -638,6 +641,133 @@ class ChangeAbility(CommandHandler):
         return format_string.format(*format_list)
 
 
+class ErasePicture(CommandHandler):
+    CCode = get_fnum_str('\xd6\x7a')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._picnumber = 0
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._picnumber = self._numbers[0]
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}<>Erase Picture :  {} \n'
+        format_list.append(str(self._picnumber))
+        return format_string.format(*format_list)
+
+#!FIX Not Complete
+class Fork(CommandHandler):
+    CCode = get_fnum_str('\xdd\x6a')
+    _switch_state_enum = ('ON', 'OFF')
+    _equas_enum = ('equivl', 'abov', 'less', 'more than', 'less than',
+                   'expt')
+    _equas_tm_enum = _equas_enum[1:3]
+    _item_gettype_enum = ('Got', 'Not got')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._forktype = 0
+        self._operand1 = 0
+        self._operand2 = 0
+        self._operand3 = 0
+        self._operand4 = 0
+        self._elsecase = 0
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._forktype = self._numbers[0]
+        self._operand1 = self._numbers[1]
+        self._operand2 = self._numbers[2]
+        self._operand3 = self._numbers[3]
+        self._operand4 = self._numbers[4]
+        self._elsecase = self._numbers[5]
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        if self._forktype == 0:
+            format_string = '{}<>FORK Optn:Switch [{}:{}] - {}\n'
+            format_list.append(str(self._operand1))
+            format_list.append(get_MSwitch_name(self._operand1))
+            format_list.append(self._switch_state_enum[self._operand2])
+        elif self._forktype == 1:
+            if not self._operand2:
+                format_string = '{}<>FORK Optn:Varbl [{}:{}]- {} {}\n'
+                format_list.append(str(self._operand1))
+                format_list.append(get_MVar_name(self._operand1))
+                format_list.append(str(self._operand3))
+                format_list.append(self._equas_enum[self._operand4])
+            else:
+                format_string = '{}<>FORK Optn:Varbl [{}:{}]- V[{}:{}] {}\n'
+                format_list.append(str(self._operand1))
+                format_list.append(get_MVar_name(self._operand1))
+                format_list.append(str(self._operand3))
+                format_list.append(get_MVar_name(self._operand3))
+                format_list.append(self._equas_enum[self._operand4])
+        elif self._forktype == 2:
+            format_string = '{}<>FORK Optn: Timer {}s {}\n'
+            format_list.append(self._operand1)
+            format_list.append(self._equas_tm_enum[self._operand2])
+        elif self._forktype == 3:
+            format_string = '{}<>FORK Optn: Money {} {}\n'
+            format_list.append(self._operand1)
+            format_list.append(self._equas_tm_enum[self._operand2])
+        elif self._forktype == 4:
+            format_string = '{}<>FORK Optn: {} Item {}\n'
+            format_list.append(get_Item_name(self._operand1))
+            format_list.append(self._item_gettype_enum[self._operand2])            
+        else:
+            format_string = '{}<>FORK Optn:{} {} {} {} {} {} \n'
+            format_list.append(str(self._forktype))
+            format_list.append(str(self._operand1))
+            format_list.append(str(self._operand2))
+            format_list.append(str(self._operand3))
+            format_list.append(str(self._operand4))
+            format_list.append(str(self._elsecase))
+            
+        return format_string.format(*format_list)
+
+
+class ElseForkCase(CommandHandler):
+    CCode = get_fnum_str('\x81\xab\x7a')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}: ELSE Case\n'
+
+
+        return format_string.format(*format_list)
+
+
+class EndForkCase(CommandHandler):
+    CCode = get_fnum_str('\x81\xab\x7b')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}:END Case\n'
+
+
+        return format_string.format(*format_list)
+
+
 class CallEvent(CommandHandler):
     CCode = get_fnum_str('\xe0\x2a')
     
@@ -673,8 +803,48 @@ class CallEvent(CommandHandler):
         return format_string.format(*format_list)                                         
 
   
+class Comment(CommandHandler):
+    CCode = get_fnum_str('\xe0\x7a')
 
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._text = ''
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._text = self._string
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}<>Note:{} \n'
+
+        format_list.append(self._text)
+
+        return format_string.format(*format_list)
+
+
+class CommentContinue(CommandHandler):
+    CCode = get_fnum_str('\x81\xaf\x0a')
+
+    def __init__(self):
+        CommandHandler.__init__(self)
+        self._text = ''
+
+    def read(self, file_obj):
+        CommandHandler.read(self, file_obj)
+        self._text = self._string
+
+    def __repr__(self, depth = 0):
+        format_list = list()
+        format_list.append(tab_token(depth + self._dep_lvl))
+        format_string = '{}:      {}\n'
+
+        format_list.append(self._text)
+
+        return format_string.format(*format_list)
     
+        
                
 class Empty(CommandHandler):
     CCode = get_fnum_str('\x00')

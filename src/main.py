@@ -8,6 +8,7 @@ import StringIO
 import os
 import os.path as path
 import struct
+import time
 import timeit
 import glob
 
@@ -372,7 +373,8 @@ def print_all_calls(M, event, page):
     for i in cl:
         print i
         
-def get_maps_list(): pass
+def get_maps_list():
+    return glob.glob1(VHgamePath, '*.lmu')
 
 def read_map(map_name):
     targetFile = path.join(VHgamePath, map_name)   
@@ -388,46 +390,19 @@ def read_db():
     signature = f.read(12)
     misc.DB = MStruct(f, MapDB[1])
     return misc.DB
-                
+
+def save_str_to_file(filepath, str):
+    f = open(filepath, 'w')
+    f.write(str)
+    f.close()
+                    
 
 if __name__ == '__main__':
     DB = read_db()
-    Map = read_map(u'Map0545.lmu')
-    print 'Page 1:' + repr(Map.Events[3].Pages[1].EventCommands)
-
-
-def lock(Map):
-    def replacer(S):
-        S = S.replace('ce 7e 00 03 61 62 63 00', 'ShowMessage:abc,d=0')
-        S = S.replace('ce 7e 01 03 61 62 63 00', 'ShowMessage:abc,d=1')
-        S = S.replace('03 61 61 61', 'aaa')
-        S = S.replace('03 62 62 62', 'bbb')
-        
-        S = S.replace('cf 1c 00 07 61 61 61 2f 62 62 62 01 02', 'Case[aaa/bbb],d=0')
-        S = S.replace('cf 1c 01 07 61 61 61 2f 62 62 62 01 02', 'Case[aaa/bbb],d=1')
-        
-        S = S.replace('0a 01 00 00', 'EmptyInCase,d=1')
-        S = S.replace('0a 02 00 00', 'EmptyInCase,d=2')
-        
-        S = S.replace('81 9d 2c 00 aaa 01 00', 'Case: aaa,d=0')
-        S = S.replace('81 9d 2c 01 aaa 01 00', 'Case: aaa,d=1')
-        S = S.replace('81 9d 2c 00 bbb 01 01', 'Case: bbb,d=0')
-        S = S.replace('81 9d 2c 01 bbb 01 01', 'Case: bbb,d=1')
-                    
-        S = S.replace('81 9d 2d 00 00 00', 'EndCase,d=0')
-        S = S.replace('81 9d 2d 01 00 00', 'EndCase,d=1')
-        
-        S = S.replace('00 00 00 00', 'Empty')           
-        return S
+    Map = read_map(u'Map0021.lmu')
+    print "CEvent 325:" + repr(DB.CEvents[325].EventCommands)
+    save_str_to_file('c:/copu.txt', repr(DB.CEvents[325].EventCommands))
     
-    showstring = '{:<30}: {}'
-    s1 = showstring.format('2xshowMessage\'abc\'+end', Map.Events[3].Pages[1].EventCommands)
-    s2 = showstring.format('Case', Map.Events[3].Pages[2].EventCommands)
-    s3 = showstring.format('Empty Case', Map.Events[3].Pages[3].EventCommands)
-    s1 = replacer(s1)
-    s2 = replacer(s2)    
-    s3 = replacer(s3)
-    
-    print s1
-    print s2
-    print s3
+    #print 'Page: ' + repr(Map.Events[3].Pages[1].EventCommands)
+    print 'Page: ' + repr(Map.Events[9].Pages[9].EventCommands)
+
