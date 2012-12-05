@@ -151,7 +151,11 @@ class MList(object):
         return self._elemList[key]
     
     def get_elist(self):
-        return tuple('elem')
+        el = list()
+        for i, e in enumerate(self._elemList):
+            if not isinstance(e, int):
+                el.append((i, e))
+        return el
     
     def key_search(self, key, match):
         'Ищет элементы в списке равные match по их полю key'
@@ -216,12 +220,13 @@ class MEventCommands(object):
     
     #Вручную убить интенды
     def find_all_commands(self, command_class):
-        "возращает список команд интансированных от command_class"
+        "возращает список команд интансированных от command_class c их номерами"
         found_commands = list()
-        for c in self._command_list:
+        for line, c in enumerate(self._command_list):
             if isinstance(c, command_class):
-                found_commands.append(repr(c).strip())
+                found_commands.append((line, c))
         return found_commands
+    
     
     def get_commands_by_frequency(self):
         return tuple(tuple('number_of_use', 'command'))
@@ -395,14 +400,28 @@ def save_str_to_file(filepath, str):
     f = open(filepath, 'w')
     f.write(str)
     f.close()
-                    
+    
+def find_commands_DB(DB, command_class, **attr):
+    for id, CEvent in DB.CEvents.get_elist():
+        CL = CEvent.EventCommands.find_all_commands(command_class)
+        for line, command in CL:
+            for key, value in attr.items():
+                try:
+                    if not getattr(command, key) == value:
+                        break
+                except AttributeError:
+                    break
+            else:
+                print 'Found at CE:{} in line {}'.format(id, line)
+    
 
 if __name__ == '__main__':
     DB = read_db()
     Map = read_map(u'Map0545.lmu')
     #print 'Page: ' + repr(Map.Events[3].Pages[1].EventCommands)
-    
-    print "CEvent 2:" + repr(DB.CEvents[2].EventCommands)
-    #save_str_to_file('c:/copu.txt', repr(DB.CEvents[325].EventCommands))
+
+
+    find_commands_DB(DB, command.ShowPicture, _picturepath = u'npc011　　コスプレ')
+        
 
 

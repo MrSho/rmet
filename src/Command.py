@@ -936,6 +936,7 @@ class DisableMenu(CommandHandler):
         return format_string.format(*format_list)
 
 
+
 #!FIX Not Complete
 class Fork(CommandHandler):
     CCode = get_fnum_str('\xdd\x6a')
