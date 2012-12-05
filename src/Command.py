@@ -6,6 +6,7 @@ Created on 24.11.2012
 '''
 from misc import *
 
+#------------------Абстрактный класс------------------
 class CommandHandler(object):
     CCode = None
     
@@ -25,7 +26,7 @@ class CommandHandler(object):
     
     def __repr__(self, depth = 0): pass     
    
-
+#------------------Дифолтный хендлер------------------
 class Unknown(CommandHandler):
     
     def __repr__(self, depth = 0): 
@@ -46,7 +47,7 @@ class Unknown(CommandHandler):
         format_list.append(s.format(*fl))                           
         return format_string.format(*format_list)    
 
-    
+#------------------Message Control------------------    
 class ShowMessage(CommandHandler):
     CCode = get_fnum_str('\xce\x7e')
     
@@ -111,6 +112,7 @@ class MessageStyle(CommandHandler):
         format_list.append(self._prevent_hero_enum[self._prevent_hero])
         format_list.append(self._allow_other_events_enum[self._allow_other_events])        
         return format_string.format(*format_list) 
+
         
 class SelectFaceGraphic(CommandHandler):
     CCode = get_fnum_str('\xcf\x12')
@@ -152,6 +154,7 @@ class SelectFaceGraphic(CommandHandler):
             format_list = list()                 
             format_list.append(tab_token(depth + self._dep_lvl))
             return format_string.format(*format_list)                                         
+
   
 class ShowChoise(CommandHandler):
     CCode = get_fnum_str('\xcf\x1c')
@@ -254,7 +257,7 @@ class InputNumber(CommandHandler):
         format_list.append(get_MVar_name(self._variable))                  
         return format_string.format(*format_list)
     
-
+#------------------Game Progression------------------
 class ChangeSwitch(CommandHandler):
     CCode = get_fnum_str('\xcf\x62')
     _set_enum = ('ON Set', 'OFF Set', 'ON/OFF Triger')
@@ -421,7 +424,7 @@ class TimerOperations(CommandHandler):
             format_list.append(str(self._availableinbattle))
         return format_string.format(*format_list)
 
-                   
+#------------------Actor & Party Management------------------                   
 class ChangeMoney(CommandHandler):
     CCode = get_fnum_str('\xd0\x46')
     _settype_enum = ('Incr.', 'Decr.')
@@ -649,7 +652,7 @@ class ChangeAbility(CommandHandler):
         format_list.append(self._settype_enum[self._settype])
         return format_string.format(*format_list)
 
-
+#------------------Picture Operations------------------
 class ShowPicture(CommandHandler):
     CCode = get_fnum_str('\xd6\x66')
 
@@ -813,7 +816,7 @@ class SetHeroTrans(CommandHandler):
         format_list.append(self._Trans_enum[self._Trans])
         return format_string.format(*format_list)
 
-
+#------------------Event Movements------------------
 class MoveEvent(CommandHandler):
     CCode = get_fnum_str('\xd8\x42')
     _event_dict = {10001: 'Hero', 10005: 'thisEvent'}
@@ -868,7 +871,7 @@ class StopAll(CommandHandler):
 
         return format_string.format(*format_list)
 
-
+#------------------Timing------------------
 class Wait(CommandHandler):
     CCode = get_fnum_str('\xd9\x12')
 
@@ -888,7 +891,7 @@ class Wait(CommandHandler):
         format_list.append(str(self._time / 10.0))
         return format_string.format(*format_list)
 
-
+#------------------Sounds and Music------------------
 class PlaySE(CommandHandler):
     CCode = get_fnum_str('\xda\x1e')
 
@@ -913,7 +916,7 @@ class PlaySE(CommandHandler):
         format_list.append(self._soundpath)
         return format_string.format(*format_list)
 
-
+#------------------Scene Control------------------
 class DisableMenu(CommandHandler):
     CCode = get_fnum_str('\xdd\x38')
     _enable_enum = ('Disable', 'Enable')
@@ -936,7 +939,7 @@ class DisableMenu(CommandHandler):
         return format_string.format(*format_list)
 
 
-
+#------------------Flow Control------------------
 #!FIX Not Complete
 class Fork(CommandHandler):
     CCode = get_fnum_str('\xdd\x6a')
@@ -1136,7 +1139,8 @@ class CallEvent(CommandHandler):
             format_list.append(get_MVar_name(self._page))            
         return format_string.format(*format_list)                                         
 
-  
+
+#------------------Comments------------------  
 class Comment(CommandHandler):
     CCode = get_fnum_str('\xe0\x7a')
 
