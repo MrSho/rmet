@@ -82,10 +82,12 @@ def read_db():
 if __name__ == '__main__':
     DB = read_db()
     Map = read_map(u'Map0545.lmu')
-    #print 'Page: ' + repr(Map.Events[3].Pages[1].EventCommands)
+    
+    #mtypes.MEventCommands.print_handlers_dict()
+    print 'Page: ' + repr(Map.Events[3].Pages[1].EventCommands)
 
 
-    find_commands_DB(DB, command.ShowPicture, _picturepath = u'1-a-00bote')
+    #find_commands_DB(DB, command.ShowPicture, _picturepath = u'1-a-00bote')
         
 
 

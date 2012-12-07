@@ -319,7 +319,7 @@ class ChangeVariable(CommandHandler):
         self._operand2 = 0
         
     def read(self, file_obj):
-        CommandHandler.read(self, file_obj)
+        super(ChangeVariable, self).read(file_obj)
         self._vartype = self._numbers[0]
         self._targetvar1 = self._numbers[1]
         self._targetvar2 = self._numbers[2]

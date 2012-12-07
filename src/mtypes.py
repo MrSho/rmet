@@ -225,7 +225,13 @@ class MEventCommands(object):
             s += e.__repr__(depth + 1)
         
         s += str_in_hex(self._unsolved_data)
-        return s        
+        return s  
+    
+    @staticmethod
+    def print_handlers_dict():
+        for id, command in sorted(MEventCommands.handlers_dict.items()):
+            print "{:<12} = {}".format(id, command.__name__)
+              
         
     
 MEventCommands.installHandlersDict()
@@ -233,6 +239,8 @@ MEventCommands.installHandlersDict()
 #------Карты файлов------
 #Являются вложеннымии списками и словарями
 #Описывают структуру файлов карт и бд через взаимоотношения объектов-типов
+
+#Декларативное программирование??)
 
 #MStruct <= {'ID': (Type, 'Name', {})}
 #MBlock  <= ()
