@@ -4,6 +4,7 @@ Created on 20.11.2012
 
 @author: Sho
 '''
+import cProfile
 
 import os.path as path
 import glob
@@ -80,11 +81,12 @@ def read_db():
     return misc.DB    
 
 if __name__ == '__main__':
-    DB = read_db()
-    Map = read_map(u'Map0545.lmu')
+    cProfile.run('read_db()')
+    #DB = read_db()
+    #Map = read_map(u'Map0545.lmu')
     
     #mtypes.MEventCommands.print_handlers_dict()
-    print 'Page: ' + repr(Map.Events[3].Pages[1].EventCommands)
+    #print 'Page: ' + repr(Map.Events[3].Pages[1].EventCommands)
 
 
     #find_commands_DB(DB, command.ShowPicture, _picturepath = u'1-a-00bote')
