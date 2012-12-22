@@ -15,8 +15,10 @@ import mtypes
 
 
 #------------------Глобальные Константы------------------
-VHgamePath = u'D:/аниме/хентай/bestiality^monster^tentacles/!VH/my try/\
-VHゲーム０１_121005_translated'
+VHgamePath = u'D:/аниме/хентай/bestiality^monster^tentacles/!VH/VHゲーム０１_121212_translated/\
+VHゲーム０１_121212_translated'
+#VHgamePath = u'D:/аниме/хентай/bestiality^monster^tentacles/!VH/my try/\
+#VHゲーム０１_121005_translated'
 DBfileName = u'RPG_RT.ldb'
 
 #------------------Вспомогательные Функции------------------      
@@ -35,19 +37,45 @@ def get_maps_list():
 
 
 
-
-
 def save_str_to_file(filepath, str):
     'Сохраняет строку str в файл filepath'
     f = open(filepath, 'w')
     f.write(str)
     f.close()
 
+def find_commands_Maps(command_class, **attr):
+    for m in get_maps_list():
+        print 'Searching: Map name: {}'.format(m)
+        find_commands_Map(read_map(m), command_class, **attr)
+
+
+def find_commands_Map(Map, command_class, **attr):
+    '''Ищет в структуре карты Map команды command_class с атрибутами
+    attr и печатает их в stdout. command_class и атрибуты смотреть в
+    command.py'''
+    for Event_id, Event in Map.Events.get_elist():
+        for Page_id, Page in Event.Pages.get_elist():
+            CL = Page.EventCommands.find_all_commands(command_class)
+            for line, command in CL:
+                for key, value in attr.items():
+                    try:
+                        if not getattr(command, key) == value:
+                            break
+                    except AttributeError:
+                        break
+                else:
+                    print 'Found at E:{} P:{} in line {}'.format(Event_id,
+                                                                 Page_id,
+                                                                 line)
+                    found = True
+                
+
     
 def find_commands_DB(DB, command_class, **attr):
     '''Ищет в структуре базы данных DB команды command_class с атрибутами
     attr и печатает их в stdout. command_class и атрибуты смотреть в
     command.py'''
+    found = False
     for id, CEvent in DB.CEvents.get_elist():
         CL = CEvent.EventCommands.find_all_commands(command_class)
         for line, command in CL:
@@ -59,7 +87,42 @@ def find_commands_DB(DB, command_class, **attr):
                     break
             else:
                 print 'Found at CE:{} in line {}'.format(id, line)
+                found = True
+    if not found: print 'DB: Nothing found'
 
+
+def check_rpgmaker_limits(DB):
+    'Выводит отношение между используемыми ресурсами рпг макера к его лимитам'
+    def nonzero_size(elist):
+        c = 0
+        for i, e in elist:
+            try:
+                if e.Name != '': c += 1
+            except AttributeError: pass
+        return c
+    
+    print       'RecName    Used       Alloc      Limit   (Used/Limit)%'
+    print       '------------------------------------------------------'
+    formatstr = '{name:<10} {used:<10} {alloc:<10} 5000     {percent:>5}%'
+    switch_elist = DB.Switch.get_elist()
+    switch_used  = nonzero_size(switch_elist)
+    print formatstr.format(name    = 'Switch', 
+                           used    = switch_used,
+                           alloc   = len(switch_elist),
+                           percent = switch_used / 50)
+    var_elist = DB.Vars.get_elist()
+    var_used  = nonzero_size(var_elist)
+    print formatstr.format(name    = 'Var', used=var_used,
+                           alloc   = len(var_elist),
+                           percent = var_used / 50)
+    cevent_elist = DB.CEvents.get_elist()
+    cevent_used  = nonzero_size(cevent_elist)
+    print formatstr.format(name    = 'CEvent', 
+                           used    = cevent_used, 
+                           alloc   = len(cevent_elist),
+                           percent = cevent_used / 50)
+    
+    
 #------------------Основные Функции------------------
 def read_map(map_name):
     'Десериализует карту map_name и возвращает ее структуру'
@@ -81,15 +144,16 @@ def read_db():
     return misc.DB    
 
 if __name__ == '__main__':
-    cProfile.run('read_db()')
-    #DB = read_db()
+    #cProfile.run('read_db()')
+    DB = read_db()
+    check_rpgmaker_limits(DB)
     #Map = read_map(u'Map0545.lmu')
     
     #mtypes.MEventCommands.print_handlers_dict()
     #print 'Page: ' + repr(Map.Events[3].Pages[1].EventCommands)
 
-
-    #find_commands_DB(DB, command.ShowPicture, _picturepath = u'1-a-00bote')
+    find_commands_Maps(command.ShowPicture, _picturepath = u'00-出産-素体　触手05')
+    find_commands_DB(DB, command.ShowPicture, _picturepath = u'00-出産-素体　触手05')
         
 
 
