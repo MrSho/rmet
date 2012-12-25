@@ -23,9 +23,9 @@ class ReadFilesTest(unittest.TestCase):
         md = dict()
         for m in main.get_maps_list():
             md[m] = main.read_map(m)
-        self.assertEqual(repr(md['Map0020.lmu'].SaveCount), '1618')
-        self.assertEqual(repr(md['Map0389.lmu'].SaveCount), '1631')
-        self.assertEqual(repr(md['Map0023.lmu'].SaveCount), '1546')
+        self.assertEqual(repr(md['Map0020.lmu'].SaveCount), '1654')
+        self.assertEqual(repr(md['Map0389.lmu'].SaveCount), '1640')
+        self.assertEqual(repr(md['Map0023.lmu'].SaveCount), '1558')
         self.assertEqual(repr(md['Map0273.lmu'].SaveCount), '449')
         self.assertEqual(repr(md['Map0399.lmu'].SaveCount), '319')
 

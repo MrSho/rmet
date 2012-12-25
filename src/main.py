@@ -8,10 +8,12 @@ import cProfile
 
 import os.path as path
 import glob
+import cmd
 
 import misc
 import command
 import mtypes
+
 
 
 #------------------Глобальные Константы------------------
@@ -141,19 +143,72 @@ def read_db():
     f = open(targetFile, 'rb')    
     signature = f.read(12)
     misc.DB = mtypes.MStruct(f, mtypes.MapDB[1])
-    return misc.DB    
+    return misc.DB
 
+#------------------Коммандный интерпритатор------------------
+#!Warning: Оболочка должна работать в кодировке shift_jis
+class CommandInter(cmd.Cmd):
+    
+    def __init__(self, Intro=None):
+        cmd.Cmd.__init__(self, Intro)
+        self.prompt = '@>'
+    
+    def do_foo(self, args):
+        print 'foo'
+        
+    def do_checklimits(self, args):
+        check_rpgmaker_limits(misc.DB)
+        
+    def do_findindb(self, args):
+        arga = args.split(' ')
+        if len(arga) < 2:
+            print 'error: not enough arguments'
+            return
+        if arga[0] == 'picture':
+            if len(arga) != 2:
+                print 'error: too many/not enough arguments'
+                return
+            kwarg = {'_picturepath': arga[1].decode('shift_jis_2004')}
+            find_commands_DB(misc.DB, command.ShowPicture, **kwarg)
+        else:
+            print 'unknown command: ' + arga[0]
+    
+    def do_findinmaps(self, args):
+        arga = args.split(' ')
+        if len(arga) < 2:
+            print 'error: not enough arguments'
+            return
+        if arga[0] == 'picture':
+            if len(arga) != 2:
+                print 'error: too many/not enough arguments'
+                return
+            kwarg = {'_picturepath': arga[1].decode('shift_jis_2004')}
+            find_commands_Maps(command.ShowPicture, **kwarg)
+        else:
+            print 'unknown command: ' + arga[0]
+    
+    def do_exit(self, args):
+        quit()
+
+        
+def inter_mode():
+    CI = CommandInter()
+    CI.cmdloop()    
+        
+        
 if __name__ == '__main__':
     #cProfile.run('read_db()')
+    print 'Loading DB....',
     DB = read_db()
-    check_rpgmaker_limits(DB)
+    print 'Done!'
     #Map = read_map(u'Map0545.lmu')
-    
+    inter_mode()
+
     #mtypes.MEventCommands.print_handlers_dict()
     #print 'Page: ' + repr(Map.Events[3].Pages[1].EventCommands)
 
-    find_commands_Maps(command.ShowPicture, _picturepath = u'00-出産-素体　触手05')
-    find_commands_DB(DB, command.ShowPicture, _picturepath = u'00-出産-素体　触手05')
+    #find_commands_Maps(command.ShowPicture, _picturepath = u'00-出産-素体　触手05')
+    #find_commands_DB(DB, command.ShowPicture, _picturepath = u'00-出産-素体　触手05')
         
 
 
