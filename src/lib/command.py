@@ -1196,3 +1196,7 @@ class Empty(CommandHandler):
     
     def __repr__(self, depth = 0):
         return tab_token(depth + self._dep_lvl) + '<>\n'
+    
+    
+def get_globals():
+    return globals()

@@ -176,8 +176,7 @@ class MEventCommands(object):
         CM = MEventCommands.command_module
         CMC = MEventCommands.command_meta_class
         HD = MEventCommands.handlers_dict
-        for e in dir(CM):
-            name = eval(CM.__name__ + '.' + e)
+        for name in CM.get_globals().values():
             if isinstance(name, type):
                 if issubclass(name, CMC) and name != CMC:
                     HD[name.CCode] = name

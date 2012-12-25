@@ -15,7 +15,6 @@ import command
 import mtypes
 
 
-
 #------------------Глобальные Константы------------------
 VHgamePath = u'D:/аниме/хентай/bestiality^monster^tentacles/!VH/VHゲーム０１_121212_translated/\
 VHゲーム０１_121212_translated'
@@ -195,14 +194,19 @@ def inter_mode():
     CI = CommandInter()
     CI.cmdloop()    
         
-        
-if __name__ == '__main__':
-    #cProfile.run('read_db()')
+
+def main():
     print 'Loading DB....',
     DB = read_db()
     print 'Done!'
+    inter_mode()    
+
+        
+if __name__ == '__main__':
+    #cProfile.run('read_db()')
+    main()
     #Map = read_map(u'Map0545.lmu')
-    inter_mode()
+    
 
     #mtypes.MEventCommands.print_handlers_dict()
     #print 'Page: ' + repr(Map.Events[3].Pages[1].EventCommands)
