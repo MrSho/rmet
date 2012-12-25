@@ -4,7 +4,7 @@ Created on 01.12.2012
 @author: Sho
 '''
 import unittest
-import main
+import rpgtools
 
 
 class ReadFilesTest(unittest.TestCase):
@@ -19,10 +19,10 @@ class ReadFilesTest(unittest.TestCase):
 
 
     def testMain(self):
-        DB = main.read_db()
+        DB = rpgtools.read_db()
         md = dict()
-        for m in main.get_maps_list():
-            md[m] = main.read_map(m)
+        for m in rpgtools.get_maps_list():
+            md[m] = rpgtools.read_map(m)
         self.assertEqual(repr(md['Map0020.lmu'].SaveCount), '1654')
         self.assertEqual(repr(md['Map0389.lmu'].SaveCount), '1640')
         self.assertEqual(repr(md['Map0023.lmu'].SaveCount), '1558')
